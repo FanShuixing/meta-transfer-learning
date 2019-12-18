@@ -92,7 +92,7 @@ class PreTrainer(object):
         # Set global count to zero
         global_count = 0
         # Set tensorboardX
-        writer = SummaryWriter(comment=self.args.save_path)
+        writer = SummaryWriter(log_dir='/output/tf_dir',comment=self.args.save_path)
         
         # Start pretrain
         for epoch in range(1, self.args.pre_max_epoch + 1):
@@ -168,7 +168,7 @@ class PreTrainer(object):
             if epoch % 10 == 0:
                 print('Best Epoch {}, Best Val acc={:.4f}'.format(trlog['max_acc_epoch'], trlog['max_acc']))
             # Run meta-validation
-            for i, batch in enumerate(self.val_loader, 1):
+            for i, batch in enumerate(self.val_loader, 1):#1表示i从1开始
                 if torch.cuda.is_available():
                     data, _ = [_.cuda() for _ in batch]
                 else:
