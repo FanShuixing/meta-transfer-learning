@@ -26,7 +26,7 @@ class MetaTrainer(object):
     """The class that contains the code for the meta-train phase and meta-eval phase."""
     def __init__(self, args):
         # Set the folder to save the records and checkpoints
-        log_base_dir = './logs/'
+        log_base_dir = '/output/tf_dir'
         if not osp.exists(log_base_dir):
             os.mkdir(log_base_dir)
         meta_base_dir = osp.join(log_base_dir, 'meta')
@@ -47,6 +47,7 @@ class MetaTrainer(object):
         # Load meta-train set
         self.trainset = Dataset('train', self.args)
         self.train_sampler = CategoriesSampler(self.trainset.label, self.args.num_batch, self.args.way, self.args.shot + self.args.train_query)
+        print('train_sampler长度:',self.train_sampler.__len__())
         self.train_loader = DataLoader(dataset=self.trainset, batch_sampler=self.train_sampler, num_workers=8, pin_memory=True)
 
         # Load meta-val set
@@ -76,7 +77,6 @@ class MetaTrainer(object):
             pretrained_dict = torch.load(osp.join(pre_save_path, 'max_acc.pth'))['params']
         pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.model_dict}
-        print(pretrained_dict.keys())
         self.model_dict.update(pretrained_dict)
         self.model.load_state_dict(self.model_dict)    
 
@@ -110,7 +110,7 @@ class MetaTrainer(object):
         # Set global count to zero
         global_count = 0
         # Set tensorboardX
-        writer = SummaryWriter(comment=self.args.save_path)
+        writer = SummaryWriter(log_dir='/output/tf_dir/%s'%self.args.phase,comment=self.args.save_path)
 
         # Generate the labels for train set of the episodes
         label_shot = torch.arange(self.args.way).repeat(self.args.shot)
@@ -150,6 +150,7 @@ class MetaTrainer(object):
                 # Output logits for model
                 logits = self.model((data_shot, label_shot, data_query))
                 # Calculate meta-train loss
+                #logits.shape:[75,5],label:[75]
                 loss = F.cross_entropy(logits, label)
                 # Calculate meta-train accuracy
                 acc = count_acc(logits, label)
