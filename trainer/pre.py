@@ -113,8 +113,8 @@ class PreTrainer(object):
                 if torch.cuda.is_available():
                     data, _ = [_.cuda() for _ in batch]
                 else:
-                    data = batch[0]
-                label = batch[1]
+                    data = batch[0]#(batch_size,3,80,80)
+                label = batch[1] #(batch_size)
                 if torch.cuda.is_available():
                     label = label.type(torch.cuda.LongTensor)
                 else:
@@ -146,7 +146,7 @@ class PreTrainer(object):
 
             # Start validation for this epoch, set model to eval mode
             self.model.eval()
-            self.model.mode = 'preval'
+            self.model.mode ='preval'
 
             # Set averager classes to record validation losses and accuracies
             val_loss_averager = Averager()
@@ -173,6 +173,7 @@ class PreTrainer(object):
                     data, _ = [_.cuda() for _ in batch]
                 else:
                     data = batch[0]
+                #data.shape:(80,3,80,80),80=16*5,5:N-way
                 p = self.args.shot * self.args.way
                 data_shot, data_query = data[:p], data[p:]
                 logits = self.model((data_shot, label_shot, data_query))

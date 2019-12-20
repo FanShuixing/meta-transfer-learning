@@ -90,13 +90,17 @@ class MtlLearner(nn.Module):
         Returns:
           logits_q: the predictions for the test samples.
         """
+        #embedding_query.shape:[75,640]
         embedding_query = self.encoder(data_query)
+        #embedding_shot.shape:[5,640]
         embedding_shot = self.encoder(data_shot)
+        #logits.shape:[5,5]
         logits = self.base_learner(embedding_shot)
         loss = F.cross_entropy(logits, label_shot)
+        #grad:type-tuple,len()-2,size-[5,640],[5]
         grad = torch.autograd.grad(loss, self.base_learner.parameters())
         fast_weights = list(map(lambda p: p[1] - self.update_lr * p[0], zip(grad, self.base_learner.parameters())))
-        logits_q = self.base_learner(embedding_query, fast_weights)
+        # logits_q = self.base_learner(embedding_query, fast_weights)
 
         for _ in range(1, self.update_step):
             logits = self.base_learner(embedding_shot, fast_weights)
